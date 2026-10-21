@@ -162,7 +162,14 @@ Realm::Config get_shared_realm_config(Configuration configuration)
         config.encryption_key = std::vector<char>(key.begin(), key.end());
     }
 
+#ifdef __EMSCRIPTEN__
+    // All work is performed on a single thread on Emscripten, so every instance would be considered to be on the same
+    // scheduler (as the managed scheduler compares by thread). Caching would then share instances (and their schedulers,
+    // which deliver notifications) between unrelated synchronisation contexts, so disable it.
+    config.cache = false;
+#else
     config.cache = configuration.enable_cache;
+#endif
 
     return config;
 }
